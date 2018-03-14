@@ -59,7 +59,9 @@ public interface ISecretBlock extends ITileEntityProvider
 	
 	/**
 	 * The unlisted property used to store the RenderState
+	 * @deprecated Going to be removed
 	 */
+	@Deprecated
 	IUnlistedProperty<IBlockState> RENDER_PROPERTY = new RenderStateUnlistedProperty();
 	
 	/**
@@ -496,7 +498,12 @@ public interface ISecretBlock extends ITileEntityProvider
 	 * A cache of the mirrored state, stored when {@link #getActualState(IBlockState, IBlockAccess, BlockPos, IBlockState)} is called. 
 	 * <br> Used to determine the correct harvest tool
 	 */
-	ThreadLocal<IBlockState> cachedMirrorState = ThreadLocal.withInitial(() -> Blocks.STONE.getDefaultState()); //Probally shouldnt use a ThreadLocal, but theres no harm in doing so
+	public static ThreadLocal<IBlockState> cachedMirrorState = ThreadLocal.withInitial(() -> Blocks.STONE.getDefaultState()); //Probally shouldnt use a ThreadLocal, but theres no harm in doing so
+	
+	//Used in transformer to make seemless connecting
+	public static ThreadLocal<IBlockAccess> cachedWorld = ThreadLocal.withInitial(() -> null);
+	public static ThreadLocal<BlockPos> cachedPosition = ThreadLocal.withInitial(() -> BlockPos.ORIGIN);
+
 	
 	/**
 	 * Called from SRM blocks ({@link Block#getActualState(IBlockState, IBlockAccess, BlockPos)})
@@ -511,6 +518,8 @@ public interface ISecretBlock extends ITileEntityProvider
 	default public IBlockState getActualState(IBlockState state, IBlockAccess worldIn, BlockPos pos, IBlockState superState)
 	{
 		cachedMirrorState.set(getState(worldIn, pos));
+		cachedWorld.set(worldIn);
+		cachedPosition.set(pos);
 		if(superState instanceof IExtendedBlockState)
 			return ((IExtendedBlockState)superState).withProperty(RENDER_PROPERTY, null);//Make sure the unlisted property is removed for 
 		return superState;
@@ -576,9 +585,13 @@ public interface ISecretBlock extends ITileEntityProvider
 				;
 			}
 			IBakedModel model = Minecraft.getMinecraft().getBlockRendererDispatcher().getModelForState(state);
-			if(model instanceof SecretBlockModel)
-				((SecretBlockModel)model).AO.set(Minecraft.getMinecraft().getBlockRendererDispatcher().getModelForState(renderState).isAmbientOcclusion());
 			state = ((IExtendedBlockState)state).withProperty(RENDER_PROPERTY, renderState);
+			if(model instanceof SecretBlockModel) {
+				((SecretBlockModel)model).AO.set(Minecraft.getMinecraft().getBlockRendererDispatcher().getModelForState(renderState).isAmbientOcclusion());
+				((SecretBlockModel)model).RENDERSTATE.set(renderState);
+				((SecretBlockModel)model).SRMSTATE.set(state);
+
+			}
 		}
 		return state;
 	}

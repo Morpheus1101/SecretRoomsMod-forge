@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.List;
 
 import com.wynprice.secretroomsmod.base.interfaces.ISecretBlock;
+import com.wynprice.secretroomsmod.core.SecretRoomsTransformer;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.SoundType;
@@ -35,6 +36,11 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class BaseFakeBlock extends Block implements ISecretBlock
 {
+	
+	public boolean doesSideBlockRendering(SecretRoomsTransformer state, IBlockAccess world, BlockPos pos, EnumFacing face) {
+		return false;
+	}
+	
 	public BaseFakeBlock(String name, Material materialIn) {
 		super(materialIn);
 		this.setUnlocalizedName(name);

@@ -72,16 +72,6 @@ public class FakeChunkCache extends ChunkCache
 	@Override
 	public IBlockState getBlockState(BlockPos pos) 
 	{
-		if(SecretOptifineHelper.IS_OPTIFINE)
-		{
-			if(Arrays.asList("C7", "C8").contains(SecretOptifineHelper.version) && prevInt != -1)
-			{
-				for(Object[] list : new ArrayList<>(SecretOptifineHelper.CURRENT_C7_LIST))
-					if(list != null && prevInt >= 0 && prevInt < list.length)
-						list[prevInt] = null;
-				prevInt = -1;
-			}
-		}
 		if(!(super.getBlockState(pos).getBlock() instanceof ISecretBlock) && EnergizedPasteHandler.hasReplacedState(world, pos) && !(Minecraft.getMinecraft().player.getItemStackFromSlot(EntityEquipmentSlot.HEAD).getItem() instanceof TrueSightHelmet))
 		{
 			if(EnergizedPasteHandler.getSetBlockState(world, pos).getBlock() != super.getBlockState(pos).getBlock()
@@ -106,13 +96,17 @@ public class FakeChunkCache extends ChunkCache
 				}
 				currentClass = currentClass.getSuperclass();
 			}
-
-			return (IBlockState) Proxy.newProxyInstance(this.getClass().getClassLoader(), interfaces.toArray(new Class<?>[0]), (proxy, method, args) -> {
-						if(method.getName().equals("doesSideBlockRendering") && ((ISecretBlock)oldCache.getBlockState(pos).getBlock()).getModelClass() != FakeBlockModel.class) {
-							return false;
-						}
-						return method.invoke(mirroredState, args);
-					});
+			
+//			final ISecretBlock secretBlock = (ISecretBlock) oldCache.getBlockState(pos).getBlock();
+//			
+//			return (IBlockState) Proxy.newProxyInstance(this.getClass().getClassLoader(), interfaces.toArray(new Class<?>[0]), (proxy, method, args) -> {
+//						if(method.getName().equals("doesSideBlockRendering") && secretBlock.getModelClass() != FakeBlockModel.class) {
+//							return false;
+//						}
+//						return method.invoke(mirroredState, args);
+//					});
+			
+			return mirroredState;
 		}
 		return oldCache.getBlockState(pos);
 	}	

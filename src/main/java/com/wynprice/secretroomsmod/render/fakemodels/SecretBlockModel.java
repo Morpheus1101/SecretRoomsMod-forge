@@ -17,6 +17,7 @@ import net.minecraft.client.renderer.block.model.ItemCameraTransforms;
 import net.minecraft.client.renderer.block.model.ItemCameraTransforms.TransformType;
 import net.minecraft.client.renderer.block.model.ItemOverrideList;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumFacing;
 import net.minecraftforge.common.property.IExtendedBlockState;
@@ -34,6 +35,10 @@ public class SecretBlockModel implements IBakedModel
 	 */
 	public final ThreadLocal<Boolean> AO = ThreadLocal.withInitial(() -> false);
 	
+	public final ThreadLocal<IBlockState> RENDERSTATE = ThreadLocal.withInitial(() -> Blocks.STONE.getDefaultState());
+	public final ThreadLocal<IBlockState> SRMSTATE = ThreadLocal.withInitial(() -> null);
+
+	
 	private final IBakedModel model;
 
 	public SecretBlockModel(IBakedModel model) {
@@ -44,17 +49,15 @@ public class SecretBlockModel implements IBakedModel
 	@Override
 	public List<BakedQuad> getQuads(IBlockState state, EnumFacing side, long rand) 
 	{
-		if(state instanceof IExtendedBlockState)
+		IBlockState renderState = RENDERSTATE.get();
+		if(SRMSTATE.get() != null)
 		{
-			IBlockState renderState = ((IExtendedBlockState)state).getValue(ISecretBlock.RENDER_PROPERTY);
-			if(renderState != null)
-			{
-				FakeBlockModel renderModel = ((ISecretBlock)state.getBlock()).phaseModel(new FakeBlockModel(renderState));
-				if(TrueSightHelmet.isHelmet()) {
-        			renderModel = ((ISecretBlock)state.getBlock()).phaseTrueModel(new TrueSightModel(new FakeBlockModel(renderState)));
-        		}
-				return renderModel.setCurrentRender(state).getQuads(renderState, side, rand);
-			}
+			state = SRMSTATE.get();
+			FakeBlockModel renderModel = ((ISecretBlock)state.getBlock()).phaseModel(new FakeBlockModel(renderState));
+			if(TrueSightHelmet.isHelmet()) {
+    			renderModel = ((ISecretBlock)state.getBlock()).phaseTrueModel(new TrueSightModel(new FakeBlockModel(renderState)));
+    		}
+			return renderModel.setCurrentRender(state).getQuads(renderState, side, rand);
 		}
 		return this.model.getQuads(state, side, rand);
 	}
